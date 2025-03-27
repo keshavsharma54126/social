@@ -10,17 +10,16 @@ import (
 func main() {
 
 	cfg := config{
-		addr: env.GetString("ADDR",":8080"),
+		addr: env.GetString("ADDR", ":8080"),
 	}
-	store:= store.NewStorage(nil)
+	store := store.NewStorage(nil)
 	app := &application{
 		config: cfg,
-		store:store,
+		store:  store,
 	}
 
-	
-	router:= app.mount()
-
+	router := app.mount()
 
 	log.Fatal(app.run(router))
+
 }
