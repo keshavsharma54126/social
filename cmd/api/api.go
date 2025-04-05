@@ -45,6 +45,13 @@ func (app *application) mount() *chi.Mux{
 		r.Route("/posts",func(r chi.Router){
 			r.Post("/",app.createPostHandler)
 		})
+		r.Get("/otp",app.sendOtpHandler)
+		r.Post("/otp",app.verityOtpHandler)
+		r.Get("/resendOtp",app.resendOtpHandler)
+
+		r.Route("/user",func(r chi.Router){
+			
+		})
 	})
 	return r
 }

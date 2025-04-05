@@ -10,8 +10,9 @@ import (
 type CreatePostPayload struct{
 	Title string 	`json:"title"`
 	Content 	string 		`json:"content"`
-	Tags 	[]string	`json:tags`
+	Tags 	[]string	`json:"tags"`
 }
+
 
 func(app *application) createPostHandler(w http.ResponseWriter,r *http.Request){
 	var payload CreatePostPayload
