@@ -11,18 +11,25 @@ import (
 
 
 type CreatePostPayload struct{
-	Title string 	`json:"title"`
-	Content 	string 		`json:"content"`
-	Tags 	[]string	`json:"tags"`
+	Title string 	`json:"title" validate:"required,max=100"`
+	Content 	string 		`json:"content" validate:"required,max=1000"`
+	Tags 	[]string	`json:"tags" validate:"required"`
 }
 
 
 func(app *application) createPostHandler(w http.ResponseWriter,r *http.Request){
 	var payload CreatePostPayload
 	if err:= readJson(w,r,&payload);err!=nil{
-		writeJsonError(w,http.StatusBadRequest,err.Error())
+		app.badRequestError(w,r,err)
 		return
 	}
+
+	err:= Validate.Struct(payload)
+	if err!=nil{
+		app.badRequestError(w,r,err)
+		return
+	}
+
 	post:= &store.Post{
 		Title: payload.Title,
 		Content: payload.Content,
@@ -32,14 +39,15 @@ func(app *application) createPostHandler(w http.ResponseWriter,r *http.Request){
 
 	ctx:= r.Context()
 
-	err:=app.store.Posts.Create(ctx,post)
+	err=app.store.Posts.Create(ctx,post)
 	if err!=nil{
-		writeJsonError(w,http.StatusInternalServerError,err.Error())
+		app.internalServerError(w,r,err)
 		return
 	}
 	err = writeJson(w,http.StatusCreated,post)
 	if err!=nil{
-		writeJsonError(w,http.StatusInternalServerError,err.Error())
+		app.internalServerError(w,r,err)
+		return
 	}
 }
 
@@ -47,10 +55,11 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request){
 	postId:= chi.URLParam(r,"postId")
 	id,err := strconv.ParseInt(postId,10,64)
 	if err!=nil{
-		writeJsonError(w,http.StatusInternalServerError,err.Error())
+		app.internalServerError(w,r,err)
 	}
 	if postId== ""{
-		writeJsonError(w,http.StatusBadRequest,"no postid in request params")
+		app.internalServerError(w,r,err)
+		return
 	}
 	
 	ctx:= r.Context()
@@ -59,14 +68,14 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request){
 	if err!=nil{
 		switch{
 		case errors.Is(err,store.ErrNotFound):
-			writeJsonError(w,http.StatusNotFound,err.Error())
+			app.notFoundResponse(w,r,err)
 		default:
 			writeJsonError(w,http.StatusInternalServerError,err.Error())
 		}
 		return
 	}
 	if err:=writeJson(w,http.StatusCreated,post);err!=nil{
-		writeJsonError(w,http.StatusInternalServerError,err.Error())
+		app.internalServerError(w,r,err)
 		return
 	}
 }
